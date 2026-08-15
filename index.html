@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MrNightwither - Spotify</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000000;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Header / Profile Section */
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 60px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .profile-avatar {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3);
+            }
+            50% {
+                box-shadow: 0 10px 50px rgba(99, 102, 241, 0.5);
+            }
+        }
+
+        .profile-info h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .profile-info p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .spotify-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #1DB954;
+            padding: 10px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .spotify-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(29, 185, 84, 0.4);
+        }
+
+        .spotify-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Podcasts Grid */
+        .podcasts-section h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .podcasts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .podcast-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .podcast-card:nth-child(1) {
+            animation-delay: 0.2s;
+        }
+
+        .podcast-card:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .podcast-card:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .podcast-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 16px 40px rgba(99, 102, 241, 0.2);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .podcast-cover-container {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+        }
+
+        .podcast-cover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .podcast-info {
+            padding: 24px;
+        }
+
+        .podcast-category {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #1DB954;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .podcast-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        .podcast-description {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .podcast-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .podcast-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #1DB954;
+            color: white;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .podcast-link:hover {
+            background: #1ed760;
+            transform: scale(1.02);
+        }
+
+        .podcast-link.disabled {
+            background: rgba(29, 185, 84, 0.5);
+            cursor: not-allowed;
+        }
+
+        .podcast-link.disabled:hover {
+            background: rgba(29, 185, 84, 0.5);
+            transform: scale(1);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .profile-section {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                font-size: 60px;
+            }
+
+            .profile-info h1 {
+                font-size: 1.8rem;
+            }
+
+            .podcasts-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="container">
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <div class="profile-avatar">🌙</div>
+            <div class="profile-info">
+                <h1>MrNightwither</h1>
+                <p>Podcast-Universum mit atemberaubenden Geschichten, ehrlichen Gedanken und atmosphärischen Welten. Willkommen in der Nacht.</p>
+                <a href="https://open.spotify.com/user/31mk4vkssev7w7vjskkvuzugar7u?si=041690014eb7449b" target="_blank" class="spotify-badge">
+                    <svg class="spotify-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.093-.899-.461-.12-.368.093-.738.461-.859 4.469-1.019 8.316-.529 11.44 1.32.332.2.438.631.199.981l-.006.009zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-12.008-1.428-.473.15-.982-.12-1.141-.591-.161-.472.119-.982.572-1.14 4.374-1.255 9.66-.501 13.42 1.729.361.227.541.736.241 1.13zm.12-3.36c-3.898-2.318-10.335-2.926-14.846-1.604-.468.146-.96-.209-1.109-.678-.148-.467.208-.96.678-1.107 4.914-1.426 11.795-.588 16.063 1.858.393.23.644.793.408 1.187-.237.39-.814.63-1.207.402z"/>
+                    </svg>
+                    Profil auf Spotify
+                </a>
+            </div>
+        </div>
+
+        <!-- Podcasts Section -->
+        <div class="podcasts-section">
+            <h2>Meine Podcasts</h2>
+            <div class="podcasts-grid">
+                <!-- Podcast 1: Ungefiltert -->
+                <div class="podcast-card">
+                    <div class="podcast-cover-container">
+                        <img src="cover-ungefiltert.jpg" alt="NightWither – Ungefiltert" class="podcast-cover-img">
+                    </div>
+                    <div class="podcast-info">
+                        <div class="podcast-category">Community • Gaming</div>
+                        <h3 class="podcast-title">NightWither – Ungefiltert</h3>
+                        <p class="podcast-description">Community-Geschichten, Gaming-Gedanken und persönliche Reflexionen über das, warum ich tue, was ich tue.</p>
+                        <div class="podcast-meta">
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <a href="https://open.spotify.com/show/033Dq1xIYGdMYFRWzgHAmv" target="_blank" class="podcast-link">
+                            Anhören →
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Podcast 2: Unterströmung -->
+                <div class="podcast-card">
+                    <div class="podcast-cover-container">
+                        <img src="cover-unterstroemung.png" alt="Unterströmung" class="podcast-cover-img">
+                    </div>
+                    <div class="podcast-info">
+                        <div class="podcast-category">Fiktion • Literatur</div>
+                        <h3 class="podcast-title">Unterströmung</h3>
+                        <p class="podcast-description">Atmosphärische Geschichten, die in deinen Erinnerungen widerhallen. 10 Episoden á ~5 Minuten.</p>
+                        <div class="podcast-meta">
+                            <span>10 Episoden</span>
+                            <span>~5 Min pro Episode</span>
+                        </div>
+                        <a href="https://open.spotify.com/show/033EtR8nAVube0a9pqBMVo" target="_blank" class="podcast-link">
+                            Anhören →
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Podcast 3: Was ich begraben habe -->
+                <div class="podcast-card">
+                    <div class="podcast-cover-container">
+                        <img src="cover-begraben.png" alt="Was ich begraben habe" class="podcast-cover-img">
+                    </div>
+                    <div class="podcast-info">
+                        <div class="podcast-category">Gesellschaft • Journalling</div>
+                        <h3 class="podcast-title">Was ich begraben habe</h3>
+                        <p class="podcast-description">Autobiographisch, ehrlich, ungefiltert. Für alle, die wissen, wie es sich anfühlt, Teile von sich zu verstecken.</p>
+                        <div class="podcast-meta">
+                            <span>11 Episoden</span>
+                            <span>10–15 Min pro Episode</span>
+                        </div>
+                        <a href="#" class="podcast-link disabled" title="Kommt bald!">
+                            Kommt bald →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>MrNightwither 🌙 | Alle Podcasts verfügbar auf Spotify</p>
+        <p style="margin-top: 10px; font-size: 0.8rem;">© 2024–2025 MrNightwither | <a href="https://open.spotify.com/user/31mk4vkssev7w7vjskkvuzugar7u" style="color: #1DB954; text-decoration: none;">Zu meinem Profil</a></p>
+    </footer>
+
+    <script>
+        // ============ PARTICLE CANVAS ============
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.color = Math.random() > 0.5 ? 'rgba(201, 168, 76,' : 'rgba(232, 201, 109,';
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                this.opacity += (Math.random() - 0.5) * 0.02;
+                this.opacity = Math.max(0.1, Math.min(0.8, this.opacity));
+            }
+
+            draw() {
+                ctx.fillStyle = this.color + this.opacity + ')';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        const particles = Array.from({ length: 80 }, () => new Particle());
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+
+</body>
+</html>
