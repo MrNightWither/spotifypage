@@ -1,9 +1,18 @@
 'use strict';
 
-// Goldene Partikel, scharf auf hochauflösenden Bildschirmen
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- Leiste ----------
+const bar = document.getElementById('bar');
+const onScroll = () => bar.classList.toggle('scrolled', window.scrollY > 10);
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+// ---------- Partikel ----------
+// Gleiche Funkenflug wie auf Shop, Events und Discord: die Bitmap wird mit der
+// Geraetepixeldichte multipliziert, gerechnet wird weiter in CSS-Pixeln.
 const canvas = document.getElementById('particle-canvas');
 const ctx = canvas.getContext('2d');
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let viewW = window.innerWidth;
 let viewH = window.innerHeight;
 
@@ -13,41 +22,40 @@ function resizeCanvas() {
   viewH = window.innerHeight;
   canvas.width = Math.round(viewW * dpr);
   canvas.height = Math.round(viewH * dpr);
+  canvas.style.width = viewW + 'px';
+  canvas.style.height = viewH + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-class Particle {
-  constructor() {
-    this.x = Math.random() * viewW;
-    this.y = Math.random() * viewH;
-    this.vx = (Math.random() - 0.5) * 0.5;
-    this.vy = (Math.random() - 0.5) * 0.5;
-    this.size = Math.random() * 2 + 0.5;
-    this.opacity = Math.random() * 0.5 + 0.2;
-    this.color = Math.random() > 0.5 ? 'rgba(201, 168, 76,' : 'rgba(232, 201, 109,';
-  }
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    if (this.x < 0 || this.x > viewW) this.vx *= -1;
-    if (this.y < 0 || this.y > viewH) this.vy *= -1;
-    this.opacity = Math.max(0.1, Math.min(0.8, this.opacity + (Math.random() - 0.5) * 0.02));
-  }
-  draw() {
-    ctx.fillStyle = this.color + this.opacity + ')';
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
+const PARTICLE_COUNT = viewW < 600 ? 60 : 110;
+const particles = [];
 
-const particles = Array.from({ length: 80 }, () => new Particle());
-function animate() {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-  ctx.fillRect(0, 0, viewW, viewH);
-  particles.forEach((p) => { p.update(); p.draw(); });
-  if (!reduceMotion) requestAnimationFrame(animate);
+function resetParticle(p, fresh) {
+  p.x = Math.random() * viewW;
+  p.y = Math.random() * viewH;
+  p.r = p.r || Math.random() * 1.4 + 0.3;
+  p.dx = (Math.random() - 0.5) * 0.08;
+  p.dy = -Math.random() * 0.12 - 0.02;
+  p.life = fresh ? Math.random() : 1;
+  return p;
 }
-animate();
+for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(resetParticle({}, true));
+
+function drawParticles() {
+  ctx.clearRect(0, 0, viewW, viewH);
+  for (const p of particles) {
+    const a = Math.max(0, p.life) * 0.8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(201, 168, 76, ${a})`;
+    ctx.fill();
+    p.x += p.dx;
+    p.y += p.dy;
+    p.life -= 0.0035;
+    if (p.life <= 0 || p.y < -4) resetParticle(p, false);
+  }
+  if (!reduceMotion) requestAnimationFrame(drawParticles);
+}
+drawParticles();
